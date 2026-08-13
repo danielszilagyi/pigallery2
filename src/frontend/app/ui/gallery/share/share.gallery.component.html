@@ -60,7 +60,21 @@
                  name="sharing-dir"
                  id="sharing-dir"
                  class="full-width form-control"
-                 [ngModel]="galleryService.isSearchResult() ? (currentQuery | searchQuery) : sharingTarget">
+                 [ngModel]="(galleryService.isSearchResult() || shareSubfolders) ? (currentQuery | searchQuery) : sharingTarget">
+        </div>
+      </div>
+
+      <div class="row mt-2" *ngIf="currentDir">
+        <div class="col-4">
+          <label class="control-label" for="shareSubfolders" i18n>Share subfolders</label>
+        </div>
+        <div class="col-8 d-flex align-items-center">
+          <input type="checkbox"
+                 id="shareSubfolders"
+                 name="shareSubfolders"
+                 class="form-check-input m-0"
+                 [(ngModel)]="shareSubfolders"
+                 (change)="onShareSubfoldersChange()"/>
         </div>
       </div>
 

@@ -30,13 +30,15 @@ export class SharingEntity implements BaseSharingDTO {
   searchQuery: SearchQueryDTO;
 
   /**
-   * Only of the defaults should be set at most. If none is set the defaultSearchView will be searchQuery
+   * Only one of the defaults should be set at most. If none is set, the searchQuery will be used
    */
   @Column({
     type: 'text',
     nullable: true
   })
   defaultDirectoryView: string;
+
+
   @Column({
     type: 'text',
     nullable: true,

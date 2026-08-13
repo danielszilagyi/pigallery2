@@ -349,6 +349,38 @@ export class GalleryManager {
     return count !== 0;
   }
 
+  async authoriseDirectory(session: SessionContext, relativeDirectoryName: string) {
+    // If no projection set for session, proceed
+    if (!session?.projectionQuery) {
+      return true;
+    }
+
+    const directoryPath = GalleryManager.parseRelativeDirPath(relativeDirectoryName);
+    const connection = await SQLConnection.getConnection();
+    const dir = await connection
+      .getRepository(DirectoryEntity)
+      .createQueryBuilder('directory')
+      .where('directory.name = :name AND directory.path = :path', {
+        name: directoryPath.name,
+        path: directoryPath.parent,
+      })
+      .select([
+        'directory.id',
+        'directory.name',
+        'directory.path',
+      ])
+      .getOne();
+
+    if (!dir) {
+      return false;
+    }
+
+    const cache = await ObjectManagers.getInstance()
+      .ProjectedCacheManager
+      .setAndGetCacheForDirectory(connection, session, dir);
+    return (cache?.recursiveMediaCount || 0) > 0;
+  }
+
   async authoriseMetaFile(session: SessionContext, p: string) {
     // If no projection set for session, proceed
     if (!session?.projectionQuery) {

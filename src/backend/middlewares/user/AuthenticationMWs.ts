@@ -158,6 +158,32 @@ export class AuthenticationMWs {
     };
   }
 
+  public static authoriseDirectory(
+    paramName: string
+  ): (req: Request, res: Response, next: NextFunction) => Promise<void> {
+    return async function authoriseDirectory(
+      req: Request,
+      res: Response,
+      next: NextFunction
+    ): Promise<void> {
+      try {
+        const directoryPath: string = req.params[paramName];
+
+        if (!await ObjectManagers.getInstance().GalleryManager.authoriseDirectory(req.session.context, directoryPath)) {
+          res.sendStatus(403);
+          return;
+        }
+
+        return next();
+      } catch (e) {
+        // On error, fail closed to be safe
+        Logger.warn(LOG_TAG, 'authoriseDirectory error:', e);
+        res.sendStatus(403);
+        return;
+      }
+    };
+  }
+
   public static authorise(
     role: UserRoles
   ): (req: Request, res: Response, next: NextFunction) => void {

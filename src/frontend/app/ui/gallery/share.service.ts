@@ -65,7 +65,6 @@ export class ShareService {
         }
       }
     });
-    this.currentSharing.subscribe( (sharing) => console.log('sharing', sharing))
   }
 
   public getUrl(share: ResponseSharingDTO): string {
@@ -119,13 +118,17 @@ export class ShareService {
   public createSharingByQuery(
     searchQuery: SearchQueryDTO,
     password: string,
-    valid: number
+    valid: number,
+    defaultDirectoryView?: string,
+    defaultSearchView?: SearchQueryDTO
   ): Promise<ResponseSharingDTO> {
     return this.networkService.postJson('/share/', {
       createSharing: {
         valid,
         ...(!!password && {password: password}),
-        searchQuery
+        searchQuery,
+        defaultDirectoryView,
+        defaultSearchView
       } as CreateSharingDTO,
     });
   }
@@ -150,14 +153,18 @@ export class ShareService {
     sharingId: number,
     searchQuery: SearchQueryDTO,
     password: string,
-    valid: number
+    valid: number,
+    defaultDirectoryView?: string,
+    defaultSearchView?: SearchQueryDTO
   ): Promise<ResponseSharingDTO> {
     return this.networkService.putJson('/share/', {
       updateSharing: {
         id: sharingId,
         valid,
         password,
-        searchQuery
+        searchQuery,
+        defaultDirectoryView,
+        defaultSearchView
       } as CreateSharingDTO,
     });
   }

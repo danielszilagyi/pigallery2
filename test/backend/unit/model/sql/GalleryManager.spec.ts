@@ -449,6 +449,69 @@ describe('GalleryManager', (sqlHelper: DBTestHelper) => {
       });
     });
 
+    describe('authoriseDirectory', () => {
+      it('returns true without projection', async () => {
+        const session = new SessionContext();
+        const root = sqlHelper.testGalleyEntities.dir;
+        const directoryPath = path.join(root.path, root.name);
+
+        const res = await gm.authoriseDirectory(session, directoryPath);
+        expect(res).to.equal(true);
+      });
+
+      it('allows directory that has matching media under projection', async () => {
+        const searchQuery = {
+          type: SearchQueryTypes.file_name,
+          value: 'photo1',
+          matchType: TextSearchQueryMatchTypes.like,
+        } as TextSearch;
+        const session = await ObjectManagers.getInstance().SessionManager.buildContext({
+          allowQuery: searchQuery,
+          overrideAllowBlockList: true,
+        } as any);
+
+        const root = sqlHelper.testGalleyEntities.dir;
+        const directoryPath = path.join(root.path, root.name);
+
+        expect(await gm.authoriseDirectory(session, directoryPath)).to.equal(true);
+      });
+
+      it('allows parent directory when a child contains matching media under projection', async () => {
+        const subDir = sqlHelper.testGalleyEntities.subDir;
+        const searchQuery = {
+          type: SearchQueryTypes.directory,
+          value: path.join(subDir.path, subDir.name) + '*',
+          matchType: TextSearchQueryMatchTypes.globMatch,
+        } as TextSearch;
+        const session = await ObjectManagers.getInstance().SessionManager.buildContext({
+          allowQuery: searchQuery,
+          overrideAllowBlockList: true,
+        } as any);
+
+        const root = sqlHelper.testGalleyEntities.dir;
+        const directoryPath = path.join(root.path, root.name);
+
+        expect(await gm.authoriseDirectory(session, directoryPath)).to.equal(true);
+      });
+
+      it('denies directory that has no matching recursive media under projection', async () => {
+        const searchQuery = {
+          type: SearchQueryTypes.file_name,
+          value: 'this_file_name_does_not_exist_anywhere',
+          matchType: TextSearchQueryMatchTypes.like,
+        } as TextSearch;
+        const session = await ObjectManagers.getInstance().SessionManager.buildContext({
+          allowQuery: searchQuery,
+          overrideAllowBlockList: true,
+        } as any);
+
+        const root = sqlHelper.testGalleyEntities.dir;
+        const directoryPath = path.join(root.path, root.name);
+
+        expect(await gm.authoriseDirectory(session, directoryPath)).to.equal(false);
+      });
+    });
+
     describe('authoriseMetaFile', () => {
       it('returns true without projection', async () => {
         const session = new SessionContext();

@@ -678,6 +678,64 @@ describe('Authentication middleware', (sqlHelper: DBTestHelper) => {
     });
   });
 
+  describe('authoriseDirectory', () => {
+
+    const buildReq = (directoryPath: string) => ({
+      session: {
+        context: {
+          user: {role: UserRoles.LimitedGuest}
+        }
+      },
+      params: {
+        directory: path.normalize(directoryPath)
+      }
+    });
+
+    const run = (req: any) => new Promise((resolve) => {
+      const res = {sendStatus: (code: number) => resolve(code)} as any;
+      const next = () => resolve('ok');
+      const mw = AuthenticationMWs.authoriseDirectory('directory');
+      AuthenticationMWs.normalizePathParam('directory')(req as any, {} as any, () => {
+        (mw as any)(req as any, res, next);
+      });
+    });
+
+    it('should call next if GalleryManager.authoriseDirectory allows', async () => {
+      const req = buildReq('/allowed/dir');
+
+      (ObjectManagers.getInstance() as any).GalleryManager = {
+        authoriseDirectory: async (_session: any, _directoryPath: string) => true
+      } as any;
+
+      const result = await run(req);
+      expect(result).to.eql('ok');
+    });
+
+    it('should deny if GalleryManager.authoriseDirectory denies', async () => {
+      const req = buildReq('/blocked/dir');
+
+      (ObjectManagers.getInstance() as any).GalleryManager = {
+        authoriseDirectory: async (_session: any, _directoryPath: string) => false
+      } as any;
+
+      const result = await run(req);
+      expect(result).to.eql(403);
+    });
+
+    it('should deny (403) on error thrown by GalleryManager.authoriseDirectory', async () => {
+      const req = buildReq('/allowed/dir');
+
+      (ObjectManagers.getInstance() as any).GalleryManager = {
+        authoriseDirectory: async () => {
+          throw new Error('db error');
+        }
+      } as any;
+
+      const result = await run(req);
+      expect(result).to.eql(403);
+    });
+  });
+
   describe('authoriseMetaFiles', () => {
     const buildReq = (metaPath: string) => ({
       session: {

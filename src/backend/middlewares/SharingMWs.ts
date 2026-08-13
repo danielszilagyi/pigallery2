@@ -126,10 +126,10 @@ export class SharingMWs {
         timeStamp: Date.now(),
       };
 
-      if (createSharing.defaultDirectoryView) {
+      if (createSharing.defaultDirectoryView !== undefined) {
         sharing.defaultDirectoryView = createSharing.defaultDirectoryView;
       }
-      if (createSharing.defaultSearchView) {
+      if (createSharing.defaultSearchView !== undefined) {
         sharing.defaultSearchView = createSharing.defaultSearchView;
       }
 
@@ -194,10 +194,10 @@ export class SharingMWs {
       };
 
 
-      if (updateSharing.defaultDirectoryView) {
+      if (updateSharing.defaultDirectoryView !== undefined) {
         sharing.defaultDirectoryView = updateSharing.defaultDirectoryView;
       }
-      if (updateSharing.defaultSearchView) {
+      if (updateSharing.defaultSearchView !== undefined) {
         sharing.defaultSearchView = updateSharing.defaultSearchView;
       }
 

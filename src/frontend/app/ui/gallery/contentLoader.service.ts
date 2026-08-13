@@ -78,7 +78,8 @@ export class ContentLoaderService implements OnDestroy {
   public async loadDirectory(directoryName: string, forceReload = false): Promise<void> {
 
     // load from cache
-    const cachedCw = this.galleryCacheService.getDirectory(directoryName);
+    const useCache = !this.shareService.isSharing();
+    const cachedCw = useCache ? this.galleryCacheService.getDirectory(directoryName) : null;
 
     this.setContent(ContentWrapperUtils.unpack(cachedCw));
     this.ongoingContentRequest = directoryName;
@@ -125,7 +126,7 @@ export class ContentLoaderService implements OnDestroy {
       return;
     }
 
-    if (!!cw?.directory) {
+    if (useCache && !!cw?.directory) {
       this.galleryCacheService.setDirectory(cw); // save it before adding references
     }
     this.setContent(ContentWrapperUtils.unpack(cw));
@@ -141,11 +142,22 @@ export class ContentLoaderService implements OnDestroy {
       this.setContent({} as PackedContentWrapperWithError); // don't empty the page when its just a reload
     }
 
-    let cw = this.galleryCacheService.getSearch(query);
+    const params: { [key: string]: unknown } = {};
+    if (Config.Sharing.enabled === true) {
+      if (this.shareService.isSharing()) {
+        params[QueryParams.gallery.sharingKey_query] =
+          this.shareService.getSharingKey();
+      }
+    }
+
+    const useCache = !this.shareService.isSharing();
+    let cw = useCache ? this.galleryCacheService.getSearch(query) : null;
     if (forceReload || (!cw || cw.searchResult == null)) {
       try {
-        cw = await this.networkService.getJson<PackedContentWrapperWithError>('/search/' + encodeURIComponent(queryStr));
-        this.galleryCacheService.setSearch(cw);
+        cw = await this.networkService.getJson<PackedContentWrapperWithError>('/search/' + encodeURIComponent(queryStr), params);
+        if (useCache) {
+          this.galleryCacheService.setSearch(cw);
+        }
       } catch (e) {
         cw = cw || {
           directory: null,

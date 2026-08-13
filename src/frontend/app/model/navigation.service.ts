@@ -5,6 +5,7 @@ import {ShareService} from '../ui/gallery/share.service';
 import {Config} from '../../../common/config/public/Config';
 import {NavigationLinkTypes} from '../../../common/config/public/ClientConfig';
 import {firstValueFrom} from 'rxjs';
+import {QueryParams} from '../../../common/QueryParams';
 
 @Injectable()
 export class NavigationService {
@@ -47,6 +48,19 @@ export class NavigationService {
   public async toDefault(): Promise<boolean> {
     await this.shareService.wait();
     if (this.shareService.isSharing()) {
+      const sharing = this.shareService.sharingSubject.value;
+      if (sharing) {
+        const qParams: { [key: string]: any } = {};
+        qParams[QueryParams.gallery.sharingKey_query] =
+          this.shareService.getSharingKey();
+        if (sharing.defaultDirectoryView !== null && sharing.defaultDirectoryView !== undefined) {
+          return this.router.navigate(['/gallery', sharing.defaultDirectoryView], {queryParams: qParams});
+        } else if (sharing.defaultSearchView) {
+          return this.router.navigate(['/search', JSON.stringify(sharing.defaultSearchView)], {queryParams: qParams});
+        } else {
+          return this.router.navigate(['/search', JSON.stringify(sharing.searchQuery)], {queryParams: qParams});
+        }
+      }
       return this.router.navigate(['/share', this.shareService.getSharingKey()]);
     } else {
       if (Config.Gallery.NavBar.links && Config.Gallery.NavBar.links.length > 0) {
@@ -71,6 +85,19 @@ export class NavigationService {
   public async toGallery(): Promise<boolean> {
     await this.shareService.wait();
     if (this.shareService.isSharing()) {
+      const sharing = this.shareService.sharingSubject.value;
+      if (sharing) {
+        const qParams: { [key: string]: any } = {};
+        qParams[QueryParams.gallery.sharingKey_query] =
+          this.shareService.getSharingKey();
+        if (sharing.defaultDirectoryView !== null && sharing.defaultDirectoryView !== undefined) {
+          return this.router.navigate(['/gallery', sharing.defaultDirectoryView], {queryParams: qParams});
+        } else if (sharing.defaultSearchView) {
+          return this.router.navigate(['/search', JSON.stringify(sharing.defaultSearchView)], {queryParams: qParams});
+        } else {
+          return this.router.navigate(['/search', JSON.stringify(sharing.searchQuery)], {queryParams: qParams});
+        }
+      }
       return this.router.navigate(['share', this.shareService.getSharingKey()]);
     } else {
       return this.router.navigate(['gallery', '']);
