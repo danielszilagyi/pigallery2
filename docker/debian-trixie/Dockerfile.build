@@ -38,13 +38,22 @@ ENV NODE_ENV=production \
 
 EXPOSE 80
 ARG TARGETARCH
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates wget ffmpeg libvips42 \
+ARG DEBIAN_MIRROR=http://repo.jztkft.hu/debian
+ARG DEBIAN_SECURITY_MIRROR=http://security.debian.org/debian-security
+
+RUN sed -i \
+      -e "s|http://deb.debian.org/debian|${DEBIAN_MIRROR}|g" \
+      -e "s|http://deb.debian.org/debian-security|${DEBIAN_SECURITY_MIRROR}|g" \
+      /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+         ca-certificates \
+         wget \
+         ffmpeg \
+         libvips42 \
     && if [ "$TARGETARCH" = "amd64" ]; then \
-        echo "Building for amd64, adding intel-media-va-driver" && \
-        apt-get install -y --no-install-recommends intel-media-va-driver; \
-    fi \
-    && apt-get clean -q -y \
+         apt-get install -y --no-install-recommends intel-media-va-driver; \
+       fi \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app /app
 
