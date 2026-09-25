@@ -178,7 +178,7 @@ export class ImageRendererFactory {
         fit: 'cover',
       });
     }
-    let processedImg: sharp.Sharp;
+    let processedImg: Sharp;
     if ((input as MediaRendererInput).mediaPath) {
       processedImg = image.webp({
         effort: 6,
