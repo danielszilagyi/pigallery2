@@ -21,10 +21,11 @@ RUN npm install --unsafe-perm \
     && mkdir -p /build/release/data/db \
     && mkdir -p /build/release/data/images \
     && mkdir -p /build/release/data/tmp \
-    && npm run create-release
+    && npm run create-release -- \
+         --skip-opt-packages=ffmpeg-static,ffprobe-static \
+         --force-opt-packages
 WORKDIR /build/release
 RUN npm install --unsafe-perm --no-package-lock node-addon-api@8.5.0 node-gyp@11.5.0
-RUN npm audit fix --omit=dev --no-package-lock
 
 #-----------------MAIN--------------------
 #-----------------------------------------
