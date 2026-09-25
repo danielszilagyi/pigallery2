@@ -46,17 +46,23 @@ ENV NODE_ENV=production \
     PI_DOCKER=true
 
 ARG TARGETARCH
+ARG DEBIAN_MIRROR=http://repo.jztkft.hu/debian
+ARG DEBIAN_SECURITY_MIRROR=http://deb.debian.org/debian-security
 
-RUN apt-get update \
+RUN sed -i \
+      -e "s|^URIs: http://deb.debian.org/debian$|URIs: ${DEBIAN_MIRROR}|" \
+      -e "s|^URIs: http://deb.debian.org/debian-security$|URIs: ${DEBIAN_SECURITY_MIRROR}|" \
+      /etc/apt/sources.list.d/debian.sources \
+    && cat /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        wget \
-        ffmpeg \
-        libvips42 \
+         ca-certificates \
+         wget \
+         ffmpeg \
+         libvips42 \
     && if [ "$TARGETARCH" = "amd64" ]; then \
-        apt-get install -y --no-install-recommends intel-media-va-driver; \
-    fi \
-    && apt-get clean \
+         apt-get install -y --no-install-recommends intel-media-va-driver; \
+       fi \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/bin/node /usr/local/bin/node
