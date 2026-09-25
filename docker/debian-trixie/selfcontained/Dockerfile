@@ -25,7 +25,12 @@ RUN npm install --unsafe-perm \
          --skip-opt-packages=ffmpeg-static,ffprobe-static \
          --force-opt-packages
 WORKDIR /build/release
-RUN npm install --unsafe-perm --no-package-lock node-addon-api@8.5.0 node-gyp@11.5.0
+RUN npm install --unsafe-perm --no-package-lock node-addon-api@8.5.0 node-gyp@11.5.0 \
+    && npm install \
+    --package-lock-only \
+    --ignore-scripts \
+    && npm audit --omit=dev || true
+
 
 #-----------------MAIN--------------------
 #-----------------------------------------
