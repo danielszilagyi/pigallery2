@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl python3 gi
   rm -rf /var/lib/apt/lists/*
 
 # copying only package{-lock}.json to make node_modules cachable
-RUN git clone -b 3.5.2 https://github.com/bpatrik/pigallery2.git /build
+RUN git clone -b 3_5_2 https://github.com/danielszilagyi/pigallery2.git /build
 WORKDIR /build
 RUN npm install --unsafe-perm \
     && mkdir -p /build/release/data/config \
@@ -24,7 +24,7 @@ RUN npm install --unsafe-perm \
     && npm run create-release
 WORKDIR /build/release
 RUN npm install --unsafe-perm --no-package-lock node-addon-api@8.5.0 node-gyp@11.5.0
-#RUN npm audit --omit=dev --no-package-lock
+RUN npm audit fix --omit=dev --no-package-lock
 
 #-----------------MAIN--------------------
 #-----------------------------------------
