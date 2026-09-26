@@ -1,7 +1,10 @@
 #-----------------BUILDER-----------------
 #-----------------------------------------
-FROM node:22-trixie AS builder
-# LABEL maintainer="Patrik J. Braun"
+FROM node:22-trixie AS nodebase
+
+FROM debian:forky-slim AS builder
+
+COPY --from=nodebase /usr/local/ /usr/local/
 
 ENV SHARP_FORCE_GLOBAL_LIBVIPS=1
 
@@ -9,8 +12,9 @@ ENV SHARP_FORCE_GLOBAL_LIBVIPS=1
 # also see: https://github.com/bpatrik/pigallery2/issues/965
 
 # Install build and vips dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends curl python3 git build-essential pkg-config \
-  libvips-dev && \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl python3 git build-essential pkg-config \
+  libvips-dev \
+  libheif-plugin-libde265 && \
   rm -rf /var/lib/apt/lists/*
 
 # copying only package{-lock}.json to make node_modules cachable
@@ -26,15 +30,20 @@ RUN npm install --unsafe-perm \
          --force-opt-packages
 WORKDIR /build/release
 RUN npm install --unsafe-perm --no-package-lock node-addon-api@8.5.0 node-gyp@11.5.0 \
+    && npm explore sharp -- npm run build \
     && npm install \
     --package-lock-only \
     --ignore-scripts \
-    && npm audit --omit=dev || true
+    && npm audit --omit=dev || true \
+    && rm -rf \
+      /build/release/node_modules/@img/sharp-linux-* \
+      /build/release/node_modules/@img/sharp-linuxmusl-* \
+      /build/release/node_modules/@img/sharp-libvips-*
 
 
 #-----------------MAIN--------------------
 #-----------------------------------------
-FROM debian:trixie-slim AS main
+FROM debian:forky-slim AS main
 
 WORKDIR /app
 
@@ -59,7 +68,8 @@ RUN sed -i \
          ca-certificates \
          wget \
          ffmpeg \
-         libvips42 \
+         libvips42t64 \
+         libheif-plugin-libde265 \
     && if [ "$TARGETARCH" = "amd64" ]; then \
          apt-get install -y --no-install-recommends intel-media-va-driver; \
        fi \
@@ -68,6 +78,9 @@ RUN sed -i \
 COPY --from=builder /usr/local/bin/node /usr/local/bin/node
 
 COPY --from=builder /build/release /app
+
+# debug
+RUN node -e 'console.log(require("sharp").versions)'
 
 RUN ["node","--expose-gc","./src/backend/index","--run-diagnostics","--config-path=/app/diagnostics-config.json","--Server-Log-level=silly"]
 
